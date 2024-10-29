@@ -38,7 +38,7 @@ import yaml
 
 from ultralytics import YOLO, YOLOWorld
 from ultralytics.cfg import TASK2DATA, TASK2METRIC
-from ultralytics.engine.exporter import export_formats
+from ultralytics.engine.exporter import export_formats, export_formats_modify
 from ultralytics.utils import ARM64, ASSETS, IS_JETSON, IS_RASPBERRYPI, LINUX, LOGGER, MACOS, TQDM, WEIGHTS_DIR
 from ultralytics.utils.checks import IS_PYTHON_3_12, check_requirements, check_yolo
 from ultralytics.utils.downloads import safe_download
@@ -150,6 +150,9 @@ def benchmark(
                 assert type(e) is AssertionError, f"Benchmark failure for {name}: {e}"
             LOGGER.warning(f"ERROR ❌️ Benchmark failure for {name}: {e}")
             y.append([name, emoji, round(file_size(filename), 1), None, None, None])  # mAP, t_inference
+        
+        if i == 0:
+            break  # only benchmark PyTorch format
 
     # Print results
     check_yolo(device=device)  # print system info
@@ -167,6 +170,114 @@ def benchmark(
         assert all(x > floor for x in metrics if pd.notna(x)), f"Benchmark failure: metric(s) < floor {floor}"
 
     return df
+
+def benchmark_modify(
+    model=WEIGHTS_DIR / "yolo11n.pt",
+    data=None,
+    imgsz=160,
+    half=False,
+    int8=False,
+    device="cpu",
+    verbose=False,
+    eps=1e-3,
+):
+    """
+    Benchmark a YOLO model across different formats for speed and accuracy.
+
+    Args:
+        model (str | Path): Path to the model file or directory.
+        data (str | None): Dataset to evaluate on, inherited from TASK2DATA if not passed.
+        imgsz (int): Image size for the benchmark.
+        half (bool): Use half-precision for the model if True.
+        int8 (bool): Use int8-precision for the model if True.
+        device (str): Device to run the benchmark on, either 'cpu' or 'cuda'.
+        verbose (bool | float): If True or a float, assert benchmarks pass with given metric.
+        eps (float): Epsilon value for divide by zero prevention.
+
+    Returns:
+        (pandas.DataFrame): A pandas DataFrame with benchmark results for each format, including file size, metric,
+            and inference time.
+
+    Examples:
+        Benchmark a YOLO model with default settings:
+        >>> from ultralytics.utils.benchmarks import benchmark
+        >>> benchmark(model="yolo11n.pt", imgsz=640)
+    """
+    import pandas as pd  # scope for faster 'import ultralytics'
+
+    pd.options.display.max_columns = 10
+    pd.options.display.width = 120
+    device = select_device(device, verbose=False)
+    if isinstance(model, (str, Path)):
+        model = YOLO(model)
+    is_end2end = getattr(model.model.model[-1], "end2end", False)
+
+    y = []
+    t0 = time.time()
+    for i, (name, format, suffix, cpu, gpu) in enumerate(zip(*export_formats_modify().values())):
+        if int8:
+            if i == 0:
+                continue
+        else:
+            if i == 1:
+                continue
+        print(f"########## {name} {format} {suffix} {cpu} {gpu} ##########")
+        emoji, filename = "❌", None  # export defaults
+        try:
+            # Checks
+            if i in {1}:  # TF SavedModel, TF GraphDef, and TFLite
+                assert not isinstance(model, YOLOWorld), "YOLOWorldv2 TensorFlow exports not supported by onnx2tf yet"
+            if "cpu" in device.type:
+                assert cpu, "inference not supported on CPU"
+            if "cuda" in device.type:
+                assert gpu, "inference not supported on GPU"
+
+            # Export
+            if format == "-":
+                filename = model.ckpt_path or model.cfg
+                exported_model = model  # PyTorch format
+            else:
+                filename = model.export(imgsz=imgsz, format=format, half=half, int8=int8, device=device, verbose=False)
+                exported_model = YOLO(filename, task=model.task)
+                assert suffix in str(filename), "export failed"
+            emoji = "❎"  # indicates export succeeded
+
+            # Predict
+            assert model.task != "pose" or i != 7, "GraphDef Pose inference is not supported"
+            exported_model.predict(ASSETS / "bus.jpg", imgsz=imgsz, device=device, half=half)
+
+            # Validate
+            data = data or TASK2DATA[model.task]  # task to dataset, i.e. coco8.yaml for task=detect
+            key = TASK2METRIC[model.task]  # task to metric, i.e. metrics/mAP50-95(B) for task=detect
+            results = exported_model.val(
+                data=data, batch=1, imgsz=imgsz, plots=False, device=device, half=half, int8=int8, verbose=False
+            )
+            metric, speed = results.results_dict[key], results.speed["inference"]
+            fps = round(1000 / (speed + eps), 2)  # frames per second
+            y.append([name, "✅", round(file_size(filename), 1), round(metric, 4), round(speed, 2), fps])
+        except Exception as e:
+            if verbose:
+                assert type(e) is AssertionError, f"Benchmark failure for {name}: {e}"
+            LOGGER.warning(f"ERROR ❌️ Benchmark failure for {name}: {e}")
+            y.append([name, emoji, round(file_size(filename), 1), None, None, None])  # mAP, t_inference
+
+    # Print results
+    check_yolo(device=device)  # print system info
+    df = pd.DataFrame(y, columns=["Format", "Status❔", "Size (MB)", key, "Inference time (ms/im)", "FPS"])
+
+    name = Path(model.ckpt_path).name
+    s = f"\nBenchmarks complete for {name} on {data} at imgsz={imgsz} ({time.time() - t0:.2f}s)\n{df}\n"
+    LOGGER.info(s)
+    with open("benchmarks.log", "a", errors="ignore", encoding="utf-8") as f:
+        f.write(s)
+
+    if verbose and isinstance(verbose, float):
+        metrics = df[key].array  # values to compare to floor
+        floor = verbose  # minimum metric floor to pass, i.e. = 0.29 mAP for YOLOv5n
+        assert all(x > floor for x in metrics if pd.notna(x)), f"Benchmark failure: metric(s) < floor {floor}"
+
+    return df
+
 
 
 class RF100Benchmark:

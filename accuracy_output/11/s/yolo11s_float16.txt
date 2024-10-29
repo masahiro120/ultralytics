@@ -1,0 +1,42 @@
+Namespace(model_path='yolo11s.pt', dataset_path='ultralytics/cfg/datasets/coco.yaml', half=True, int8=False, imgsz=640)
+########## PyTorch - .pt True True ##########
+
+image 1/1 /home/hasumi/ultralytics/ultralytics/assets/bus.jpg: 640x480 4 persons, 1 bus, 119.0ms
+Speed: 2.0ms preprocess, 119.0ms inference, 2.8ms postprocess per image at shape (1, 3, 640, 480)
+                   all       5000      36335      0.704      0.577      0.634      0.467
+Speed: 0.4ms preprocess, 12.4ms inference, 0.0ms loss, 1.3ms postprocess per image
+Saving runs/detect/val149/predictions.json...
+
+Evaluating pycocotools mAP using runs/detect/val149/predictions.json and /home/hasumi/ultralytics/datasets/coco/annotations/instances_val2017.json...
+loading annotations into memory...
+Done (t=0.50s)
+creating index...
+index created!
+Loading and preparing results...
+DONE (t=2.69s)
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=29.26s).
+Accumulating evaluation results...
+DONE (t=6.26s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.469
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.639
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.505
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.290
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.516
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.644
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.361
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.600
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.653
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.470
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.714
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.814
+Results saved to [1mruns/detect/val149[0m
+[2K[2KSetup complete ✅ (16 CPUs, 15.6 GB RAM, 345.2/1006.9 GB disk)
+
+Benchmarks complete for yolo11s.pt on ultralytics/cfg/datasets/coco.yaml at imgsz=640 (133.71s)
+    Format Status❔  Size (MB)  metrics/mAP50-95(B)  Inference time (ms/im)    FPS
+0  PyTorch       ✅       18.4                0.467                   12.45  80.35
+

@@ -17,6 +17,8 @@ from .utils import bias_init_with_prob, linear_init
 
 __all__ = "Detect", "Segment", "Pose", "Classify", "OBB", "RTDETRDecoder", "v10Detect"
 
+# Delete Output Flag
+delete_output = False
 
 class Detect(nn.Module):
     """YOLO Detect head for detection models."""
@@ -69,8 +71,12 @@ class Detect(nn.Module):
             x[i] = torch.cat((self.cv2[i](x[i]), self.cv3[i](x[i])), 1)
         if self.training:  # Training path
             return x
-        y = self._inference(x)
-        return y if self.export else (y, x)
+        
+        if delete_output:
+            return x
+        else:
+            y = self._inference(x)
+            return y if self.export else (y, x)
 
     def forward_end2end(self, x):
         """
@@ -92,11 +98,17 @@ class Detect(nn.Module):
         if self.training:  # Training path
             return {"one2many": x, "one2one": one2one}
 
-        y = self._inference(one2one)
-        y = self.postprocess(y.permute(0, 2, 1), self.max_det, self.nc)
-        return y if self.export else (y, {"one2many": x, "one2one": one2one})
+        if delete_output:
+            return {"one2many": x, "one2one": one2one}
+        else:
+            y = self._inference(one2one)
+            y = self.postprocess(y.permute(0, 2, 1), self.max_det, self.nc)
+            return y if self.export else (y, {"one2many": x, "one2one": one2one})
 
     def _inference(self, x):
+        if delete_output == True:
+            raise NotImplementedError("後処理を無効化しているため、_inferenceは使用できません。")
+
         """Decode predicted bounding boxes and class probabilities based on multiple-level feature maps."""
         # Inference path
         shape = x[0].shape  # BCHW

@@ -1,0 +1,74 @@
+Namespace(model_path='yolov5n6.pt', dataset_path='ultralytics/cfg/datasets/coco.yaml', half=False, int8=True, imgsz=1280)
+PRO TIP 💡 Replace 'model=yolov5n6.pt' with new 'model=yolov5n6u.pt'.
+YOLOv5 'u' models are trained with https://github.com/ultralytics/ultralytics and feature improved performance vs standard YOLOv5 models trained with https://github.com/ultralytics/yolov5.
+
+########## TensorFlow Lite tflite .tflite True True ##########
+YOLOv5n6u summary (fused): 253 layers, 4,326,688 parameters, 0 gradients, 7.8 GFLOPs
+
+[34m[1mPyTorch:[0m starting from 'yolov5n6u.pt' with input shape (1, 3, 1280, 1280) BCHW and output shape(s) (1, 84, 34000) (8.7 MB)
+
+[34m[1mTensorFlow SavedModel:[0m starting export with tensorflow 2.17.0...
+
+[34m[1mONNX:[0m starting export with onnx 1.17.0 opset 17...
+============= Diagnostic Run torch.onnx.export version 2.0.1+cu117 =============
+verbose: False, log level: Level.ERROR
+======================= 0 NONE 0 NOTE 0 WARNING 0 ERROR ========================
+
+[34m[1mONNX:[0m slimming with onnxslim 0.1.35...
+[34m[1mONNX:[0m export success ✅ 1.1s, saved as 'yolov5n6u.onnx' (17.6 MB)
+[34m[1mTensorFlow SavedModel:[0m collecting INT8 calibration images from 'data=coco8.yaml'
+[34m[1mTensorFlow SavedModel:[0m WARNING ⚠️ >300 images recommended for INT8 calibration, found 4 images.
+[34m[1mTensorFlow SavedModel:[0m starting TFLite export with onnx2tf 1.22.3...
+[34m[1mTensorFlow SavedModel:[0m export success ✅ 98.6s, saved as 'yolov5n6u_saved_model' (59.2 MB)
+
+[34m[1mTensorFlow Lite:[0m starting export with tensorflow 2.17.0...
+[34m[1mTensorFlow Lite:[0m export success ✅ 0.0s, saved as 'yolov5n6u_saved_model/yolov5n6u_int8.tflite' (5.0 MB)
+
+Export complete (100.4s)
+Results saved to [1m/home/hasumi/ultralytics[0m
+Predict:         yolo predict task=detect model=yolov5n6u_saved_model/yolov5n6u_int8.tflite imgsz=1280 int8 
+Validate:        yolo val task=detect model=yolov5n6u_saved_model/yolov5n6u_int8.tflite imgsz=1280 data=/usr/src/app/ultralytics/datasets/coco.yaml int8 
+Visualize:       https://netron.app
+Loading yolov5n6u_saved_model/yolov5n6u_int8.tflite for TensorFlow Lite inference...
+
+image 1/1 /home/hasumi/ultralytics/ultralytics/assets/bus.jpg: 1280x1280 5 persons, 1 bus, 1 potted plant, 238.8ms
+Speed: 8.2ms preprocess, 238.8ms inference, 6.3ms postprocess per image at shape (1, 3, 1280, 1280)
+Loading yolov5n6u_saved_model/yolov5n6u_int8.tflite for TensorFlow Lite inference...
+Setting batch=1 input of shape (1, 3, 1280, 1280)
+                   all       5000      36335      0.648      0.511      0.562      0.403
+Speed: 5.5ms preprocess, 223.1ms inference, 0.0ms loss, 2.9ms postprocess per image
+Saving runs/detect/val214/predictions.json...
+
+Evaluating pycocotools mAP using runs/detect/val214/predictions.json and /home/hasumi/ultralytics/datasets/coco/annotations/instances_val2017.json...
+loading annotations into memory...
+Done (t=0.25s)
+creating index...
+index created!
+Loading and preparing results...
+DONE (t=3.76s)
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=35.87s).
+Accumulating evaluation results...
+DONE (t=8.12s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.407
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.569
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.448
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.251
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.447
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.517
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.335
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.577
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.641
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.476
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.686
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.771
+Results saved to [1mruns/detect/val214[0m
+[2K[2KSetup complete ✅ (16 CPUs, 15.6 GB RAM, 354.9/1006.9 GB disk)
+
+Benchmarks complete for yolov5n6u.pt on ultralytics/cfg/datasets/coco.yaml at imgsz=1280 (1367.57s)
+            Format Status❔  Size (MB)  metrics/mAP50-95(B)  Inference time (ms/im)   FPS
+0  TensorFlow Lite       ✅        5.0               0.4032                  223.13  4.48
+
