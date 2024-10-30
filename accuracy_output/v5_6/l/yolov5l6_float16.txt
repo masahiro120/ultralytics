@@ -1,0 +1,4 @@
+Namespace(model_path='yolov5l6.pt', dataset_path='ultralytics/cfg/datasets/coco.yaml', half=True, int8=False, imgsz=1280)
+PRO TIP 💡 Replace 'model=yolov5l6.pt' with new 'model=yolov5l6u.pt'.
+YOLOv5 'u' models are trained with https://github.com/ultralytics/ultralytics and feature improved performance vs standard YOLOv5 models trained with https://github.com/ultralytics/yolov5.
+

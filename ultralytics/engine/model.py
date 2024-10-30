@@ -685,6 +685,56 @@ class Model(nn.Module):
             verbose=kwargs.get("verbose"),
         )
 
+    def benchmark_modify(
+        self,
+        **kwargs,
+    ):
+        """
+        Benchmarks the model across various export formats to evaluate performance.
+
+        This method assesses the model's performance in different export formats, such as ONNX, TorchScript, etc.
+        It uses the 'benchmark' function from the ultralytics.utils.benchmarks module. The benchmarking is
+        configured using a combination of default configuration values, model-specific arguments, method-specific
+        defaults, and any additional user-provided keyword arguments.
+
+        Args:
+            **kwargs (Any): Arbitrary keyword arguments to customize the benchmarking process. These are combined with
+                default configurations, model-specific arguments, and method defaults. Common options include:
+                - data (str): Path to the dataset for benchmarking.
+                - imgsz (int | List[int]): Image size for benchmarking.
+                - half (bool): Whether to use half-precision (FP16) mode.
+                - int8 (bool): Whether to use int8 precision mode.
+                - device (str): Device to run the benchmark on (e.g., 'cpu', 'cuda').
+                - verbose (bool): Whether to print detailed benchmark information.
+
+        Returns:
+            (Dict): A dictionary containing the results of the benchmarking process, including metrics for
+                different export formats.
+
+        Raises:
+            AssertionError: If the model is not a PyTorch model.
+
+        Examples:
+            >>> model = YOLO("yolo11n.pt")
+            >>> results = model.benchmark(data="coco8.yaml", imgsz=640, half=True)
+            >>> print(results)
+        """
+        self._check_is_pytorch_model()
+        from ultralytics.utils.benchmarks import benchmark_modify
+
+        custom = {"verbose": False}  # method defaults
+        args = {**DEFAULT_CFG_DICT, **self.model.args, **custom, **kwargs, "mode": "benchmark"}
+        return benchmark_modify(
+            model=self,
+            data=kwargs.get("data"),  # if no 'data' argument passed set data=None for default datasets
+            imgsz=args["imgsz"],
+            half=args["half"],
+            int8=args["int8"],
+            device=args["device"],
+            verbose=kwargs.get("verbose"),
+        )
+
+
     def export(
         self,
         **kwargs,
@@ -726,7 +776,7 @@ class Model(nn.Module):
         custom = {
             "imgsz": self.model.args["imgsz"],
             "batch": 1,
-            "data": None,
+            "data": "coco8.yaml",
             "device": None,  # reset to avoid multi-GPU errors
             "verbose": False,
         }  # method defaults

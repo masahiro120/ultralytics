@@ -1,0 +1,33 @@
+Namespace(model_path='yolov3.pt', dataset_path='ultralytics/cfg/datasets/coco.yaml', half=False, int8=True, imgsz=640)
+PRO TIP 💡 Replace 'model=yolov3.pt' with new 'model=yolov3u.pt'.
+YOLOv5 'u' models are trained with https://github.com/ultralytics/ultralytics and feature improved performance vs standard YOLOv5 models trained with https://github.com/ultralytics/yolov5.
+
+########## TensorFlow Lite tflite .tflite True True ##########
+YOLOv3 summary (fused): 226 layers, 103,725,920 parameters, 0 gradients, 282.6 GFLOPs
+
+[34m[1mPyTorch:[0m starting from 'yolov3u.pt' with input shape (1, 3, 640, 640) BCHW and output shape(s) (1, 84, 8400) (198.3 MB)
+
+[34m[1mTensorFlow SavedModel:[0m starting export with tensorflow 2.18.0...
+
+[34m[1mONNX:[0m starting export with onnx 1.17.0 opset 19...
+[34m[1mONNX:[0m slimming with onnxslim 0.1.36...
+[34m[1mONNX:[0m export success ✅ 5.7s, saved as 'yolov3u.onnx' (396.0 MB)
+[34m[1mTensorFlow SavedModel:[0m collecting INT8 calibration images from 'data=coco8.yaml'
+[34m[1mTensorFlow SavedModel:[0m WARNING ⚠️ >300 images recommended for INT8 calibration, found 4 images.
+[34m[1mTensorFlow SavedModel:[0m starting TFLite export with onnx2tf 1.22.3...
+[34m[1mTensorFlow SavedModel:[0m export success ✅ 487.9s, saved as 'yolov3u_saved_model' (1288.2 MB)
+
+[34m[1mTensorFlow Lite:[0m starting export with tensorflow 2.18.0...
+[34m[1mTensorFlow Lite:[0m export success ✅ 0.0s, saved as 'yolov3u_saved_model/yolov3u_int8.tflite' (99.3 MB)
+
+Export complete (489.5s)
+Results saved to [1m/home/hassu-/ultralytics[0m
+Predict:         yolo predict task=detect model=yolov3u_saved_model/yolov3u_int8.tflite imgsz=640 int8 
+Validate:        yolo val task=detect model=yolov3u_saved_model/yolov3u_int8.tflite imgsz=640 data=coco.yaml int8 
+Visualize:       https://netron.app
+Loading yolov3u_saved_model/yolov3u_int8.tflite for TensorFlow Lite inference...
+
+image 1/1 /home/hassu-/ultralytics/ultralytics/assets/bus.jpg: 640x640 4 persons, 1 bus, 651.9ms
+Speed: 2.0ms preprocess, 651.9ms inference, 9.7ms postprocess per image at shape (1, 3, 640, 640)
+Loading yolov3u_saved_model/yolov3u_int8.tflite for TensorFlow Lite inference...
+Setting batch=1 input of shape (1, 3, 640, 640)

@@ -93,6 +93,7 @@ from ultralytics.utils.files import file_size, spaces_in_path
 from ultralytics.utils.ops import Profile
 from ultralytics.utils.torch_utils import TORCH_1_13, get_latest_opset, select_device, smart_inference_mode
 
+delete_output = False
 
 def export_formats():
     """Ultralytics YOLO export formats."""
@@ -110,6 +111,14 @@ def export_formats():
         ["TensorFlow.js", "tfjs", "_web_model", True, False],
         ["PaddlePaddle", "paddle", "_paddle_model", True, True],
         ["NCNN", "ncnn", "_ncnn_model", True, True],
+    ]
+    return dict(zip(["Format", "Argument", "Suffix", "CPU", "GPU"], zip(*x)))
+
+def export_formats_modify():
+    """Ultralytics YOLO export formats."""
+    x = [
+        ["PyTorch", "-", ".pt", True, True],
+        ["TensorFlow Lite", "tflite", ".tflite", True, True],
     ]
     return dict(zip(["Format", "Argument", "Suffix", "CPU", "GPU"], zip(*x)))
 
@@ -410,7 +419,10 @@ class Exporter:
         LOGGER.info(f"\n{prefix} starting export with onnx {onnx.__version__} opset {opset_version}...")
         f = str(self.file.with_suffix(".onnx"))
 
-        output_names = ["output0", "output1"] if isinstance(self.model, SegmentationModel) else ["output0"]
+        if delete_output:
+            output_names = ["output0", "output1"] if isinstance(self.model, SegmentationModel) else ["output0", "output1", "output2"]
+        else:
+            output_names = ["output0", "output1"] if isinstance(self.model, SegmentationModel) else ["output0"]
         dynamic = self.args.dynamic
         if dynamic:
             dynamic = {"images": {0: "batch", 2: "height", 3: "width"}}  # shape(1,3,640,640)
@@ -1068,22 +1080,45 @@ class Exporter:
         input_meta.content.contentProperties.colorSpace = schema.ColorSpaceType.RGB
         input_meta.content.contentPropertiesType = schema.ContentProperties.ImageProperties
 
-        # Create output info
-        output1 = schema.TensorMetadataT()
-        output1.name = "output"
-        output1.description = "Coordinates of detected objects, class labels, and confidence score"
-        output1.associatedFiles = [label_file]
-        if self.model.task == "segment":
+        if delete_output:
+            # Create output info for 3 outputs
+            output1 = schema.TensorMetadataT()
+            output1.name = "output1"
+            output1.description = "First output: Coordinates of detected objects."
+            output1.associatedFiles = [label_file]
+
             output2 = schema.TensorMetadataT()
-            output2.name = "output"
-            output2.description = "Mask protos"
+            output2.name = "output2"
+            output2.description = "Second output: Class labels."
             output2.associatedFiles = [label_file]
 
-        # Create subgraph info
-        subgraph = schema.SubGraphMetadataT()
-        subgraph.inputTensorMetadata = [input_meta]
-        subgraph.outputTensorMetadata = [output1, output2] if self.model.task == "segment" else [output1]
-        model_meta.subgraphMetadata = [subgraph]
+            output3 = schema.TensorMetadataT()
+            output3.name = "output3"
+            output3.description = "Third output: Confidence scores."
+            output3.associatedFiles = [label_file]
+
+            # Create subgraph info
+            subgraph = schema.SubGraphMetadataT()
+            subgraph.inputTensorMetadata = [input_meta]
+            subgraph.outputTensorMetadata = [output1, output2, output3]
+            model_meta.subgraphMetadata = [subgraph]
+        else:
+            # Create output info
+            output1 = schema.TensorMetadataT()
+            output1.name = "output"
+            output1.description = "Coordinates of detected objects, class labels, and confidence score"
+            output1.associatedFiles = [label_file]
+            if self.model.task == "segment":
+                output2 = schema.TensorMetadataT()
+                output2.name = "output"
+                output2.description = "Mask protos"
+                output2.associatedFiles = [label_file]
+
+            # Create subgraph info
+            subgraph = schema.SubGraphMetadataT()
+            subgraph.inputTensorMetadata = [input_meta]
+            subgraph.outputTensorMetadata = [output1, output2] if self.model.task == "segment" else [output1]
+            model_meta.subgraphMetadata = [subgraph]
 
         b = flatbuffers.Builder(0)
         b.Finish(model_meta.Pack(b), metadata.MetadataPopulator.METADATA_FILE_IDENTIFIER)

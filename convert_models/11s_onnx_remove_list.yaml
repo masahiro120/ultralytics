@@ -1,0 +1,4 @@
+target_node_names:
+  - "/model.23/Reshape"
+  - "/model.23/Reshape_1"
+  - "/model.23/Reshape_2"
