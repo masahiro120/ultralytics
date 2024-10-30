@@ -93,7 +93,7 @@ from ultralytics.utils.files import file_size, spaces_in_path
 from ultralytics.utils.ops import Profile
 from ultralytics.utils.torch_utils import TORCH_1_13, get_latest_opset, select_device, smart_inference_mode
 
-delete_output = True
+delete_output = False
 
 def export_formats():
     """Ultralytics YOLO export formats."""

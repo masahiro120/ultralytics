@@ -18,7 +18,7 @@ from .utils import bias_init_with_prob, linear_init
 __all__ = "Detect", "Segment", "Pose", "Classify", "OBB", "RTDETRDecoder", "v10Detect"
 
 # Delete Output Flag
-delete_output = True
+delete_output = False
 
 class Detect(nn.Module):
     """YOLO Detect head for detection models."""
