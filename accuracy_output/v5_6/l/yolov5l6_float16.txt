@@ -2,3 +2,44 @@ Namespace(model_path='yolov5l6.pt', dataset_path='ultralytics/cfg/datasets/coco.
 PRO TIP 💡 Replace 'model=yolov5l6.pt' with new 'model=yolov5l6u.pt'.
 YOLOv5 'u' models are trained with https://github.com/ultralytics/ultralytics and feature improved performance vs standard YOLOv5 models trained with https://github.com/ultralytics/yolov5.
 
+########## PyTorch - .pt True True ##########
+
+image 1/1 /home/hasumi/ultralytics/ultralytics/assets/bus.jpg: 1280x960 5 persons, 1 bicycle, 1 bus, 162.6ms
+Speed: 6.3ms preprocess, 162.6ms inference, 3.5ms postprocess per image at shape (1, 3, 1280, 960)
+                   all       5000      36335      0.739      0.663      0.722      0.557
+Speed: 0.7ms preprocess, 37.5ms inference, 0.0ms loss, 1.7ms postprocess per image
+Saving runs/detect/val233/predictions.json...
+
+Evaluating pycocotools mAP using runs/detect/val233/predictions.json and /home/hasumi/ultralytics/datasets/coco/annotations/instances_val2017.json...
+loading annotations into memory...
+Done (t=0.29s)
+creating index...
+index created!
+Loading and preparing results...
+DONE (t=1.92s)
+creating index...
+index created!
+Running per image evaluation...
+Evaluate annotation type *bbox*
+DONE (t=24.37s).
+Accumulating evaluation results...
+DONE (t=4.14s).
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.557
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.727
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.610
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.413
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.606
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.692
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.403
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.678
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.734
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.604
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.769
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.853
+Results saved to [1mruns/detect/val233[0m
+[2K[2KSetup complete ✅ (16 CPUs, 15.6 GB RAM, 355.9/1006.9 GB disk)
+
+Benchmarks complete for yolov5l6u.pt on ultralytics/cfg/datasets/coco.yaml at imgsz=1280 (256.52s)
+    Format Status❔  Size (MB)  metrics/mAP50-95(B)  Inference time (ms/im)    FPS
+0  PyTorch       ✅      164.9               0.5569                   37.52  26.65
+

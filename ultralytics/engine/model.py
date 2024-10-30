@@ -775,6 +775,7 @@ class Model(nn.Module):
 
         custom = {
             "imgsz": self.model.args["imgsz"],
+            # "imgsz": 1120,
             "batch": 1,
             "data": "coco8.yaml",
             "device": None,  # reset to avoid multi-GPU errors

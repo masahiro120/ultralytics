@@ -17,7 +17,7 @@ print(args)
 # Load the YOLO model
 model = YOLO(args.model_path)
 
-# results = model.train(data=args.dataset_path, epochs=1)
+# results = model.train(data=args.dataset_path, epochs=1, imgsz=args.imgsz)
 
 # # model.ckpt = results.best if results.best else results.last
 
@@ -34,10 +34,10 @@ model = YOLO(args.model_path)
 
 # model.save("yolov6n.pt")
 
-resuls = model.benchmark_modify(data=args.dataset_path, imgsz=args.imgsz, half=args.half, int8=args.int8)
+# resuls = model.benchmark_modify(data=args.dataset_path, imgsz=args.imgsz, half=args.half, int8=args.int8)
 
 # print("Total number of parameters: ", sum(p.numel() for p in model.parameters()))
 
 # model.export(format="onnx", int8=True, simplify=True)
 # model.export(format="pb", simplify=True)
-# model.export(format="tflite", int8=True, data=args.dataset_path, simplify=True)
+model.export(format="tflite", int8=args.int8, data=args.dataset_path, simplify=True)
