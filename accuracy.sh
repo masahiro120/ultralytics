@@ -5,14 +5,13 @@ dataset_path='ultralytics/cfg/datasets/coco.yaml'
 model_dir='ultralytics/cfg/models'
 
 yolo_version_list=(
-    # 'v3'
-    # 'v5'
-    # 'v5_6'
-    # 'v6'
-    # 'v8'
-    # 'v9'
+    'v3'
+    'v5'
+    'v5_6'
+    'v8'
+    'v9'
     'v10'
-    # '11'
+    '11'
 )
 
 default_model_size_list=(
@@ -38,12 +37,12 @@ v9_model_size_list=(
 )
 
 v10_model_size_list=(
-    # 'n'
-    # 's'
-    # 'm'
+    'n'
+    's'
+    'm'
     'b'
-    # 'l'
-    # 'x'
+    'l'
+    'x'
 )
 
 imgsz=640
@@ -79,19 +78,54 @@ for yolo_version in "${yolo_version_list[@]}"; do
         else
             model_name="yolo$yolo_version$model_size"
         fi
+
         echo "Model Name: $model_name"
-        echo "Float 32"
-        output_file="${output_size_dir}/${model_name}_float32.txt"
-        python default_convert.py --model_path "$model_name.pt" --dataset_path $dataset_path --imgsz $imgsz > $output_file
+        if [ "$yolo_version" == "v5_6" ]; then
+            if [ "$model_size" == "m" ] || [ "$model_size" == "l" ] || [ "$model_size" == "x" ]; then
+                echo "Float 32"
+                output_file="${output_size_dir}/${model_name}_float32.txt"
+                python default_convert.py --model_path "$model_name.pt" --dataset_path $dataset_path --imgsz $imgsz > $output_file
 
-        echo "Float 16"
-        output_file="${output_size_dir}/${model_name}_float16.txt"
-        python default_convert.py --model_path "$model_name.pt" --dataset_path $dataset_path --imgsz $imgsz --half > $output_file
+                echo "Float 16"
+                output_file="${output_size_dir}/${model_name}_float16.txt"
+                python default_convert.py --model_path "$model_name.pt" --dataset_path $dataset_path --imgsz $imgsz --half > $output_file
+            fi
+        fi
 
-        if [ "$model_size" != "l" ] && [ "$model_size" != "x" ]; then
+        if [ "$yolo_version" == "v3" ]; then
+            if [ "$model_size" == "-tiny" ]; then
+                continue
+            fi
+        fi
+
+        if [ "$yolo_version" == "v5" ]; then
+            if [ "$model_size" == "n" ] || [ "$model_size" == "s" ] || [ "$model_size" == "m" ]; then
+                continue
+            fi
+        fi
+
+        if [ "$yolo_version" == "v5_6" ]; then
+            if [ "$model_size" == "n" ]; then
+                continue
+            fi
+        fi
+
+        if [ "$yolo_version" == "v8" ]; then
+            if [ "$model_size" == "n" ] || [ "$model_size" == "s" ] || [ "$model_size" == "m" ]; then
+                continue
+            fi
+        fi
+
+        if [ "$yolo_version" == "v9" ]; then
+            if [ "$model_size" == "t" ] || [ "$model_size" == "s" ] || [ "$model_size" == "m" ] || [ "$model_size" == "c" ]; then
+                continue
+            fi
+        fi
+
+        # if [ "$model_size" != "l" ] && [ "$model_size" != "x" ]; then
             echo "Int 8"
             output_file="${output_size_dir}/${model_name}_int8.txt"
             python default_convert.py --model_path "$model_name.pt" --dataset_path $dataset_path --imgsz $imgsz --int8 > $output_file
-        fi
+        # fi
     done
 done
