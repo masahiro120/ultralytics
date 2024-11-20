@@ -84,6 +84,7 @@ class Model(nn.Module):
         model: Union[str, Path] = "yolo11n.pt",
         task: str = None,
         verbose: bool = False,
+        save_dir: str = None,
     ) -> None:
         """
         Initializes a new instance of the YOLO model class.
@@ -118,7 +119,8 @@ class Model(nn.Module):
         self.ckpt = None  # if loaded from *.pt
         self.cfg = None  # if loaded from *.yaml
         self.ckpt_path = None
-        self.overrides = {}  # overrides for trainer object
+        # self.overrides = {}  # overrides for trainer object
+        self.overrides = {"save_dir": save_dir} if save_dir else {}  # overrides for trainer object
         self.metrics = None  # validation/training metrics
         self.session = None  # HUB session
         self.task = task  # task type
@@ -777,7 +779,7 @@ class Model(nn.Module):
             "imgsz": self.model.args["imgsz"],
             # "imgsz": 1120,
             "batch": 1,
-            "data": "coco8.yaml",
+            "data": "coco300.yaml",
             "device": None,  # reset to avoid multi-GPU errors
             "verbose": False,
         }  # method defaults
@@ -843,8 +845,12 @@ class Model(nn.Module):
         args = {**overrides, **custom, **kwargs, "mode": "train"}  # highest priority args on the right
         if args.get("resume"):
             args["resume"] = self.ckpt_path
+        
+        if args.get("save_dir"):
+            print("save_dir", args.get("save_dir"))
 
         self.trainer = (trainer or self._smart_load("trainer"))(overrides=args, _callbacks=self.callbacks)
+        # self.trainer.start_epoch = 100
         if not args.get("resume"):  # manually set model only if not resuming
             self.trainer.model = self.trainer.get_model(weights=self.model if self.ckpt else None, cfg=self.model.yaml)
             self.model = self.trainer.model

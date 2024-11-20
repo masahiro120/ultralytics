@@ -118,7 +118,8 @@ def export_formats_modify():
     """Ultralytics YOLO export formats."""
     x = [
         ["PyTorch", "-", ".pt", True, True],
-        ["TensorFlow Lite", "tflite", ".tflite", True, True],
+        ["TensorRT", "engine", ".engine", False, True],
+        # ["TensorFlow Lite", "tflite", ".tflite", True, True],
     ]
     return dict(zip(["Format", "Argument", "Suffix", "CPU", "GPU"], zip(*x)))
 
@@ -788,7 +789,9 @@ class Exporter:
                     trt.IInt8Calibrator.__init__(self)
                     self.dataset = dataset
                     self.data_iter = iter(dataset)
-                    self.algo = trt.CalibrationAlgoType.ENTROPY_CALIBRATION_2
+                    # self.algo = trt.CalibrationAlgoType.ENTROPY_CALIBRATION_2
+                    self.algo = trt.CalibrationAlgoType.MINMAX_CALIBRATION
+                    # self.algo = trt.CalibrationAlgoType.LEGACY_CALIBRATION
                     self.batch = batch
                     self.cache = Path(cache)
 

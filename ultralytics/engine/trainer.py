@@ -232,30 +232,32 @@ class BaseTrainer:
         # Model
         self.run_callbacks("on_pretrain_routine_start")
         ckpt = self.setup_model()
+        if self.resume:
+            print(f"ckpt['epoch'] = {ckpt['epoch']}")
         self.model = self.model.to(self.device)
         self.set_model_attributes()
 
-        # Freeze layers
-        freeze_list = (
-            self.args.freeze
-            if isinstance(self.args.freeze, list)
-            else range(self.args.freeze)
-            if isinstance(self.args.freeze, int)
-            else []
-        )
-        always_freeze_names = [".dfl"]  # always freeze these layers
-        freeze_layer_names = [f"model.{x}." for x in freeze_list] + always_freeze_names
-        for k, v in self.model.named_parameters():
-            # v.register_hook(lambda x: torch.nan_to_num(x))  # NaN to 0 (commented for erratic training results)
-            if any(x in k for x in freeze_layer_names):
-                LOGGER.info(f"Freezing layer '{k}'")
-                v.requires_grad = False
-            elif not v.requires_grad and v.dtype.is_floating_point:  # only floating point Tensor can require gradients
-                LOGGER.info(
-                    f"WARNING ⚠️ setting 'requires_grad=True' for frozen layer '{k}'. "
-                    "See ultralytics.engine.trainer for customization of frozen layers."
-                )
-                v.requires_grad = True
+        # # Freeze layers
+        # freeze_list = (
+        #     self.args.freeze
+        #     if isinstance(self.args.freeze, list)
+        #     else range(self.args.freeze)
+        #     if isinstance(self.args.freeze, int)
+        #     else []
+        # )
+        # always_freeze_names = [".dfl"]  # always freeze these layers
+        # freeze_layer_names = [f"model.{x}." for x in freeze_list] + always_freeze_names
+        # for k, v in self.model.named_parameters():
+        #     # v.register_hook(lambda x: torch.nan_to_num(x))  # NaN to 0 (commented for erratic training results)
+        #     if any(x in k for x in freeze_layer_names):
+        #         LOGGER.info(f"Freezing layer '{k}'")
+        #         v.requires_grad = False
+        #     elif not v.requires_grad and v.dtype.is_floating_point:  # only floating point Tensor can require gradients
+        #         LOGGER.info(
+        #             f"WARNING ⚠️ setting 'requires_grad=True' for frozen layer '{k}'. "
+        #             "See ultralytics.engine.trainer for customization of frozen layers."
+        #         )
+        #         v.requires_grad = True
 
         # Check AMP
         self.amp = torch.tensor(self.args.amp).to(self.device)  # True or False
@@ -325,6 +327,44 @@ class BaseTrainer:
         if world_size > 1:
             self._setup_ddp(world_size)
         self._setup_train(world_size)
+        # すべてのパラメータの勾配計算を無効化
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        # 再学習リスト
+        retrain_list = ['Detect', 'v10Detect', 'AConv']
+
+        if hasattr(self.model, 'model'):
+            # 'Detect'レイヤーの確認
+            for module in self.model.model.modules():
+                # if module.__class__.__name__ == 'Detect' or module.__class__.__name__ == 'v10Detect':
+                if module.__class__.__name__ in retrain_list:
+                    print(f"module.__class__.__name__ = {module.__class__.__name__}:338")
+                    for param in module.parameters():
+                        param.requires_grad = True
+        else:
+            # model内で直接探す方法
+            for module in self.model.modules():
+                # if module.__class__.__name__ == 'Detect' or module.__class__.__name__ == 'v10Detect':
+                if module.__class__.__name__ in retrain_list:
+                    print(f"module.__class__.__name__ = {module.__class__.__name__}:346")
+                    for param in module.parameters():
+                        param.requires_grad = True
+
+        # バッチノルム層の勾配計算を有効化
+        for module in self.model.modules():
+            if isinstance(module, nn.BatchNorm2d) or isinstance(module, nn.BatchNorm1d):
+                for param in module.parameters():
+                    param.requires_grad = True
+
+        # 'dfl' モジュールを探索してパラメータの勾配計算を無効化
+        for module in self.model.model.modules():
+            if hasattr(module, 'dfl'):
+                for param in module.dfl.parameters():
+                    param.requires_grad = False
+        
+        for name, param in self.model.named_parameters():
+            print(f"{name}: requires_grad={param.requires_grad}")
 
         nb = len(self.train_loader)  # number of batches
         nw = max(round(self.args.warmup_epochs * nb), 100) if self.args.warmup_epochs > 0 else -1  # warmup iterations
@@ -344,6 +384,10 @@ class BaseTrainer:
             self.plot_idx.extend([base_idx, base_idx + 1, base_idx + 2])
         epoch = self.start_epoch
         self.optimizer.zero_grad()  # zero any resumed gradients to ensure stability on train start
+
+
+
+            
         while True:
             self.epoch = epoch
             self.run_callbacks("on_train_epoch_start")

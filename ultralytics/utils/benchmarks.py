@@ -225,8 +225,8 @@ def benchmark_modify(
         emoji, filename = "❌", None  # export defaults
         try:
             # Checks
-            if i in {1}:  # TF SavedModel, TF GraphDef, and TFLite
-                assert not isinstance(model, YOLOWorld), "YOLOWorldv2 TensorFlow exports not supported by onnx2tf yet"
+            # if i in {1}:  # TF SavedModel, TF GraphDef, and TFLite
+            #     assert not isinstance(model, YOLOWorld), "YOLOWorldv2 TensorFlow exports not supported by onnx2tf yet"
             if "cpu" in device.type:
                 assert cpu, "inference not supported on CPU"
             if "cuda" in device.type:

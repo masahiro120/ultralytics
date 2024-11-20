@@ -63,6 +63,7 @@ class BaseDataset(Dataset):
         fraction=1.0,
     ):
         """Initialize BaseDataset with given configuration and options."""
+        print(f"#####################{prefix}Initializing BaseDataset...")
         super().__init__()
         self.img_path = img_path
         self.imgsz = imgsz
@@ -90,6 +91,7 @@ class BaseDataset(Dataset):
         self.ims, self.im_hw0, self.im_hw = [None] * self.ni, [None] * self.ni, [None] * self.ni
         self.npy_files = [Path(f).with_suffix(".npy") for f in self.im_files]
         self.cache = cache.lower() if isinstance(cache, str) else "ram" if cache is True else None
+        print(f"#####################{self.prefix}Caching images to {self.cache}...")
         if self.cache == "ram" and self.check_cache_ram():
             if hyp.deterministic:
                 LOGGER.warning(
@@ -188,6 +190,7 @@ class BaseDataset(Dataset):
 
     def cache_images(self):
         """Cache images to memory or disk."""
+        print(f"#####################{self.prefix}Caching images to {self.cache}...")
         b, gb = 0, 1 << 30  # bytes of cached images, bytes per gigabytes
         fcn, storage = (self.cache_images_to_disk, "Disk") if self.cache == "disk" else (self.load_image, "RAM")
         with ThreadPool(NUM_THREADS) as pool:

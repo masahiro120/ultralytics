@@ -38,6 +38,6 @@ resuls = model.benchmark_modify(data=args.dataset_path, imgsz=args.imgsz, half=a
 
 # print("Total number of parameters: ", sum(p.numel() for p in model.parameters()))
 
-# model.export(format="onnx", int8=True, simplify=True)
+# model.export(format="onnx", simplify=True)
 # model.export(format="pb", simplify=True)
 # model.export(format="tflite", int8=args.int8, data=args.dataset_path, simplify=True)
